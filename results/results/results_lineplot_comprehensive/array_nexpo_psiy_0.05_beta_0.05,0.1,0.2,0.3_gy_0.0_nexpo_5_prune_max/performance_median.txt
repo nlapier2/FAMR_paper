@@ -1,0 +1,16 @@
+Average Estimates for Betas: 
+0.0272728 0.07516844 0.1555024 0.2479427 0.004255787
+Positive rate for exposures: 
+0.27 0.51 0.76 0.94 0.13
+Standard Deviations of Betas: 
+0.09698998 0.0814409 0.08653073 0.09390698 0.07399832
+Average StdErrors for Betas: 
+0.05041897 0.04748311 0.05002633 0.05087322 0.04943839
+Q-value positive rate for exposures: 
+0.22 0.43 0.71 0.91 0.12
+Precision/Recall/F1 based on p-values:
+0.9501916 0.62 0.7503782
+Precision/Recall/F1 based on Q-values:
+0.9497908 0.5675 0.7104851
+Power at FPR threshold of 0.05: 
+0.08 0.17 0.47 0.82

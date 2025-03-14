@@ -17,7 +17,8 @@ pip_checker = function(method) {
 # change internal method name to displayed method name
 display_name = function(method) {
   if(method == 'famr_gfa')  return('FAMR-Susie')
-  if(method == 'famr_none')  return('famr_noFA')
+  if(method == 'famr_none')  return('FAMR-Susie_noFA')
+  if(method == 'famr_prune0')  return('FAMR-Susie_clump0')
   if(method == 'ivw')  return('IVW')
   if(method == 'ivw_gfa')  return('IVW-GFA')
   if(method == 'median')  return('Median')
@@ -213,7 +214,8 @@ power_fpr_thresh_plot = function(dirname, truevars, prefix='all_res_', n_x_show 
 # line plots showing FPR/Power trending as a function of confounding/true signal strength
 param_lineplot = function(dirvec, param_name, param_vals, truepos,
                           prefix='all_res_', thresh = 0.05, pip_thresh = 0.95,
-                          methods=c(), type='both', use_qval=T, oldpip=F) {
+                          methods=c(), type='both', use_qval=T, oldpip=F,
+                          saveloc='NONE') {
   all_method_labels = c()
   all_param_vals = c()
   all_fpr = c()
@@ -277,10 +279,12 @@ param_lineplot = function(dirvec, param_name, param_vals, truepos,
   } else {
     ggarrange(fpr_plot, power_plot, nrow=2, ncol=1, common.legend = TRUE, legend="bottom")
   }
+  
+  if(saveloc != 'NONE')  ggsave(saveloc, dpi=300, bg='white')
 }
 
 # plot showing pip calibration for a single pip-based method
-pip_calibration_plot = function(res, truecols, method_name, oldpip=F) {
+pip_calibration_plot = function(res, truecols, method_name, oldpip=F, saveloc='NONE') {
   if(oldpip) {
     pip_res = res
   } else {
@@ -333,6 +337,8 @@ pip_calibration_plot = function(res, truecols, method_name, oldpip=F) {
           plot.title = element_text(size=20)) +
     guides(fill = guide_legend(title = "Sample Size")) +
     scale_x_continuous(breaks = df$bin_mid)
+  
+  if(saveloc != 'NONE')  ggsave(saveloc, dpi=300, bg='white')
 }
 
 
@@ -393,225 +399,7 @@ auc_roc_plot = function(dirname, truevars, prefix='all_res_', thresh = 0.05,
          col=color_vec, lwd=7, cex=.7, horiz = TRUE)
 }
 
-
-# this_dirvec = c('results_ukbb_attenuation_100loci/cor_plei_psiy_0.0/',
-#                 'results_ukbb_attenuation_100loci/cor_plei_psiy_0.05/',
-#                 'results_ukbb_attenuation_100loci/cor_plei_psiy_0.1/',
-#                 'results_ukbb_attenuation_100loci/cor_plei_psiy_0.15/',
-#                 'results_ukbb_attenuation_100loci/cor_plei_psiy_0.2/')
-# param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
-#                c(0.0, 0.05, 0.1, 0.15, 0.2), c(1),
-#                prefix='all_res_', thresh = 0.05, type='fpr',
-#                methods=c('2sls', '2sls.univar', '2sls.sel'))
-#
-# this_dirvec = c('results_ukbb_attenuation_100loci/cor_plei_beta_0.05/',
-#                 'results_ukbb_attenuation_100loci/cor_plei_psiy_0.15/',
-#                 'results_ukbb_attenuation_100loci/cor_plei_beta_0.15/',
-#                 'results_ukbb_attenuation_100loci/cor_plei_beta_0.2/')
-# param_lineplot(this_dirvec, 'Causal effect size', c(0.05, 0.1, 0.15, 0.2), c(1),
-#               prefix='all_res_', thresh = 0.05, type='power',
-#               methods=c('2sls', '2sls.univar', '2sls.sel'))
-
-# stacked_barplot('results_ukbb_attenuation_100loci/no_plei/', '1',
-#                prefix='all_res_', thresh = 0.05, pip_thresh=0.5,
-#                methods=c('2sls', '2sls.sel', '2sls.univar', 'ivw', 'mrash', 'ctwas', 'varbvs'))
-
-# ----------------------------
-
-# this_dirvec = c('results_ukbb_attenuation_100loci_2samp/no_plei_beta_0.05/',
-#                 'results_ukbb_attenuation_100loci_2samp/no_plei/',
-#                 'results_ukbb_attenuation_100loci_2samp/no_plei_beta_0.15/',
-#                 'results_ukbb_attenuation_100loci_2samp/no_plei_beta_0.2/')
-# param_lineplot(this_dirvec, 'Causal effect size', c(0.05, 0.1, 0.15, 0.2), c(1),
-#                prefix='all_res_', thresh = 0.05, type='power',
-#                methods=c('ivw', 'ivw.univar', 'ivw.univar.allsnp'))
-#
-# group_barchart('results_ukbb_2samp_nome/no_plei_gx_0.2_gy_0.2_gz_0.4_psix_0.2_psiy_0.15_mu_0.0/',
-#                prefix='all_res_', n_x_show = 1, thresh = 0.05,
-#                methods=c('ivw.nome', 'ivw.nosel', 'ivw.sel'))
-#
-# res = na.omit(read.table(
-#   'results_susie_rss_test/no_plei_gx_0.2_gy_0.2_gz_0.4_psix_0.2_psiy_0.15_mu_0.0/all_res_ctwas.txt'))
-# pip_calibration_plot(res, '1,2,3,4', 'ctwas')
-
-
-
-# this_dirvec = c('results_ukbb_attenuation_100loci_2samp_ctwas/no_plei_beta_0.05/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/no_plei/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/no_plei_beta_0.15/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/no_plei_beta_0.2/')
-# param_lineplot(this_dirvec, 'Causal effect size', c(0.05, 0.1, 0.15, 0.2), c(1),
-#                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-#                methods=c('ivw', 'ivw.univar', 'ctwas'))
-
-# this_dirvec = c('results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.0/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.05/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.1/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.15/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.2/')
-# param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
-#                c(0.0, 0.05, 0.1, 0.15, 0.2), c(1),
-#                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-#                methods=c('ivw', 'ivw.univar', 'ctwas'))
-
-# this_dirvec = c('results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.0/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.05/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.1/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.15/',
-#                 'results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.2/')
-# param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
-#                c(0.0, 0.05, 0.1, 0.15, 0.2), c(1),
-#                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-#                methods=c('ivw', 'ivw.univar', 'ctwas'))
-#
-# res = na.omit(read.table(
-#   'results_ukbb_attenuation_100loci_2samp_ctwas/no_plei/all_res_ctwas.txt'))
-# pip_calibration_plot(res, '1', 'ctwas')
-#
-# res = na.omit(read.table(
-#   'results_ukbb_attenuation_100loci_2samp_ctwas/cor_plei_psiy_0.1/all_res_ctwas.txt'))
-# pip_calibration_plot(res, '1', 'ctwas')
-
-
-# ------------------------
-
-### STATGEN 2024 plots
-
-# stacked_barplot('results_statgen2024_J1/no_plei_gx_0.2_gy_0.1_gz_0.4_psix_0.3_psiy_0.15_mu_0.0/', '1,2,3,4',
-#                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#                methods=c('ctwas.rss_gfa', 'ivw_gfa'),
-#                labels=c('FAMR_fa', 'IVW_fa'))
-#
-# stacked_barplot('results_statgen2024_J1/uncor_plei_gx_0.2_gy_0.1_gz_0.4_psix_0.3_psiy_0.15_mu_0.0/', '1,2,3,4',
-#                 prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#                 methods=c('ctwas.rss_gfa', 'ivw_gfa'),
-#                 labels=c('FAMR_fa', 'IVW_fa'))
-#
-# stacked_barplot('results_statgen2024_J1/cor_plei_gx_0.2_gy_0.1_gz_0.4_psix_0.3_psiy_0.15_mu_0.0/', '1,2,3,4',
-#                 prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#                 methods=c('ctwas.rss', 'ctwas.rss_gfa', 'ivw', 'ivw_gfa'),
-#                 labels=c('FAMR_no_fa', 'FAMR_fa', 'IVW_no_fa', 'IVW_fa'))
-#
-# res = na.omit(read.table(
-#   'results_statgen2024_J1/no_plei_gx_0.2_gy_0.1_gz_0.4_psix_0.3_psiy_0.15_mu_0.0/all_res_ctwas.rss_gfa.txt'))
-# pip_calibration_plot(res, '1,2,3,4', 'ctwas_rss_no_plei')
-#
-# res = na.omit(read.table(
-#   'results_statgen2024_J1/uncor_plei_gx_0.2_gy_0.1_gz_0.4_psix_0.3_psiy_0.15_mu_0.0/all_res_ctwas.rss_gfa.txt'))
-# pip_calibration_plot(res, '1,2,3,4', 'ctwas_rss_uncor_plei')
-#
-# res = na.omit(read.table(
-#   'results_statgen2024_J1/cor_plei_gx_0.2_gy_0.1_gz_0.4_psix_0.3_psiy_0.15_mu_0.0/all_res_ctwas.rss_gfa.txt'))
-# pip_calibration_plot(res, '1,2,3,4', 'ctwas_rss_cor_plei')
-
-# --------------------------
-
-# Oracle mode plots
-
-# stacked_barplot('results_oracle_summary/cor_plei/', '1,2,3,4',
-#                 prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#                 methods=c('ctwas.rss.proj', 'ctwas.proj', 'ivw.proj', 'ivw'))
-#
-# stacked_barplot('results_oracle_summary/cor_plei/', '1,2,3,4,31,32,33',
-#                 prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#                 methods=c('ctwas.rss', 'ctwas'))
-
-# res = na.omit(read.table(
-#   'results_oracle_summary/cor_plei/all_res_ctwas.rss.proj.txt'))
-# pip_calibration_plot(res, '1,2,3,4', 'ctwas.rss.proj')
-# 
-# res = na.omit(read.table(
-#   'results_oracle_summary/cor_plei/all_res_ctwas.proj.txt'))
-# pip_calibration_plot(res, '1,2,3,4', 'ctwas.proj')
-# 
-# res = na.omit(read.table(
-#   'results_oracle_summary/cor_plei/all_res_ctwas.rss.txt'))
-# pip_calibration_plot(res, '1,2,3,4,31,32,33', 'ctwas.rss')
-# 
-# res = na.omit(read.table(
-#   'results_oracle_summary/cor_plei/all_res_ctwas.txt'))
-# pip_calibration_plot(res, '1,2,3,4,31,32,33', 'ctwas')
-
-
-# --------------------------
-
-# Trying for new param lineplots during paper revisions (Jan-Feb 2025)
-
-# this_dirvec = c('results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.0_mu_0.0/',
-#                 'results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.05_mu_0.0/',
-#                 'results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.1_mu_0.0/',
-#                 'results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.15_mu_0.0/')
-# param_lineplot(this_dirvec, '% heritability mediated \n by confounders (no uncor. plei)',
-#                c(0.0, 0.05, 0.1, 0.15), c(1,2,3,4),
-#                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-#                methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-# 
-# this_dirvec = c('results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.0_mu_0.0/',
-#                 'results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.05_mu_0.0/',
-#                 'results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.1_mu_0.0/',
-#                 'results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.15_mu_0.0/')
-# param_lineplot(this_dirvec, '% heritability mediated \n by confounders (no uncor. plei)',
-#                c(0.0, 0.05, 0.1, 0.15), c(1,2,3,4),
-#                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-#                methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-# 
-# this_dirvec = c('results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.0_mu_0.0/',
-#                 'results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.05_mu_0.0/',
-#                 'results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.1_mu_0.0/',
-#                 'results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.15_mu_0.0/')
-# param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
-#                c(0.0, 0.05, 0.1, 0.15), c(1,2,3,4),
-#                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-#                methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-# 
-# this_dirvec = c('results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.0_mu_0.0/',
-#                 'results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.05_mu_0.0/',
-#                 'results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.1_mu_0.0/',
-#                 'results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.15_mu_0.0/')
-# param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
-#                c(0.0, 0.05, 0.1, 0.15), c(1,2,3,4),
-#                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-#                methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-
-# --------------------
-
-# Assessing potential use of AUC plots
-
-# auc_roc_plot('results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.0_mu_0.0/', 
-#              '1,2,3,4', prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#              methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-# 
-# auc_roc_plot('results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.05_mu_0.0/', 
-#                 '1,2,3,4', prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#                 methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-# 
-# auc_roc_plot('results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.1_mu_0.0/', 
-#              '1,2,3,4', prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#              methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-# 
-# auc_roc_plot('results/results_lineplot_standard_settings_no_uncor/array_gx_0.2_gy_0.0_gz_0.2_psix_0.1_psiy_0.15_mu_0.0/', 
-#              '1,2,3,4', prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#              methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-# 
-# auc_roc_plot('results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.0_mu_0.0/', 
-#              '1,2,3,4', prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#              methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-# 
-# auc_roc_plot('results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.05_mu_0.0/', 
-#              '1,2,3,4', prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#              methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-# 
-# auc_roc_plot('results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.1_mu_0.0/', 
-#              '1,2,3,4', prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#              methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-# 
-# auc_roc_plot('results/results_lineplot_standard_settings/array_gx_0.2_gy_0.1_gz_0.2_psix_0.1_psiy_0.15_mu_0.0/', 
-#              '1,2,3,4', prefix='all_res_', thresh = 0.05, pip_thresh=0.95, use_qval=T,
-#              methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
-
-# ---------------------
-
-# Possible line plots for postdoc interview
+# -----------------------
 
 # Basic FPR (scaling theta_zy) and power (scaling beta) plots
 
@@ -623,7 +411,8 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_zy_psiy_0.0_beta_0
 param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
                c(0.0, 0.025, 0.05, 0.075, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_fpr_array_zy.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_beta_psiy_0.05_beta_0.0,0.0,0.0,0.0_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_beta_psiy_0.05_beta_0.1,0.1,0.1,0.1_gy_0.0_nexpo_30_prune_max/',
@@ -632,7 +421,8 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_beta_psiy_0.05_bet
 param_lineplot(this_dirvec, 'Effect size of causal exposures',
                c(0.0, 0.1, 0.2, 0.3), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_power_array_beta.png')
 
 # Plots showing effects of uncorrelated pleiotropy on both FPR and Power
 
@@ -642,7 +432,8 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0
 param_lineplot(this_dirvec, '% heritability due to \n direct effects',
                c(0.0, 0.05, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_fpr_array_gy.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.05_nexpo_30_prune_max/',
@@ -650,27 +441,28 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0
 param_lineplot(this_dirvec, '% heritability due to \n direct effects',
                c(0.0, 0.05, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_power_array_gy.png')
 
 # Plots showing effect of number of exposures on FPR and power
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_10_prune_max/',
                 'results/results_lineplot_comprehensive/array_zy_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_60_prune_max/')#,
-                #'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_90_prune_max/')
+                'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_60_prune_max/')
 param_lineplot(this_dirvec, 'Number of exposures',
                c(10, 30, 60), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_fpr_array_nexpo.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_10_prune_max/',
                 'results/results_lineplot_comprehensive/array_zy_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_60_prune_max/')#,
-                #'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_90_prune_max/')
+                'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_60_prune_max/')
 param_lineplot(this_dirvec, 'Number of exposures',
                c(10, 30, 60), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_power_array_nexpo.png')
 
 # Plots showing effect of prune percentage on performance
 
@@ -682,7 +474,8 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_prune_psiy_0.05_be
 param_lineplot(this_dirvec, 'LD Clumping threshold',
                c(0.0, 0.1, 0.3, 0.5, 0.75), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_fpr_array_prune.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_prune_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_0.0/',
                 'results/results_lineplot_comprehensive/array_prune_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_0.1/',
@@ -692,7 +485,8 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_prune_psiy_0.05_be
 param_lineplot(this_dirvec, 'LD Clumping threshold',
                c(0.0, 0.1, 0.3, 0.5, 0.75), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_power_array_prune.png')
 
 # Same as above plots, but withour FAMR-Susie
 
@@ -704,7 +498,8 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_zy_psiy_0.0_beta_0
 param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
                c(0.0, 0.025, 0.05, 0.075, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_fpr_array_zy_no_famr.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_beta_psiy_0.05_beta_0.0,0.0,0.0,0.0_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_beta_psiy_0.05_beta_0.1,0.1,0.1,0.1_gy_0.0_nexpo_30_prune_max/',
@@ -713,7 +508,8 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_beta_psiy_0.05_bet
 param_lineplot(this_dirvec, 'Effect size of causal exposures',
                c(0.0, 0.1, 0.2, 0.3), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_power_array_beta_no_famr.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.05_nexpo_30_prune_max/',
@@ -721,7 +517,8 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0
 param_lineplot(this_dirvec, '% heritability due to \n direct effects',
                c(0.0, 0.05, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_fpr_array_gy_no_famr.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.05_nexpo_30_prune_max/',
@@ -729,25 +526,26 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0
 param_lineplot(this_dirvec, '% heritability due to \n direct effects',
                c(0.0, 0.05, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_power_array_gy_no_famr.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_10_prune_max/',
                 'results/results_lineplot_comprehensive/array_zy_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_60_prune_max/')#,
-#'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_90_prune_max/')
+                'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_60_prune_max/')
 param_lineplot(this_dirvec, 'Number of exposures',
                c(10, 30, 60), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_fpr_array_nexpo_no_famr.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_10_prune_max/',
                 'results/results_lineplot_comprehensive/array_zy_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_60_prune_max/')#,
-#'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_90_prune_max/')
+                'results/results_lineplot_comprehensive/array_nexpo_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_60_prune_max/')
 param_lineplot(this_dirvec, 'Number of exposures',
                c(10, 30, 60), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_power_array_nexpo_no_famr.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_prune_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_0.0/',
                 'results/results_lineplot_comprehensive/array_prune_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_0.1/',
@@ -757,7 +555,8 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_prune_psiy_0.05_be
 param_lineplot(this_dirvec, 'LD Clumping threshold',
                c(0.0, 0.1, 0.3, 0.5, 0.75), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_fpr_array_prune_no_famr.png')
 
 this_dirvec = c('results/results_lineplot_comprehensive/array_prune_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_0.0/',
                 'results/results_lineplot_comprehensive/array_prune_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_0.1/',
@@ -767,21 +566,23 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_prune_psiy_0.05_be
 param_lineplot(this_dirvec, 'LD Clumping threshold',
                c(0.0, 0.1, 0.3, 0.5, 0.75), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'))
+               methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
+               saveloc='plot_images/lineplot_power_array_prune_no_famr.png')
 
 
 # PIP calibration plots for FAMR-Susie under correlated and uncorrelated pleiotropy
 
 res = na.omit(read.table(
   'results/results_lineplot_comprehensive/array_zy_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/all_res_famr_gfa.txt'))
-pip_calibration_plot(res, '1,2,3,4', 'FAMR-Susie')
+pip_calibration_plot(res, '1,2,3,4', 'FAMR-Susie', saveloc='plot_images/pip_calibration_famr_susie_cor_plei.png')
 
 res = na.omit(read.table(
   'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.05_nexpo_30_prune_max/all_res_famr_gfa.txt'))
-pip_calibration_plot(res, '1,2,3,4', 'FAMR-Susie')
+pip_calibration_plot(res, '1,2,3,4', 'FAMR-Susie', saveloc='plot_images/pip_calibration_famr_susie_uncor_plei.png')
 
 
-# Plots comparing FAMR versions with different parts missing (max prune, no prior, no FA)
+# Plots comparing FAMR versions with different parts missing (max prune, no FA)
+# Prune is a misnomer, LD clumping is what is actually performed
 
 this_dirvec = c('results/results_compare_famr_versions/array_zy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_compare_famr_versions/array_zy_psiy_0.025_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
@@ -791,7 +592,8 @@ this_dirvec = c('results/results_compare_famr_versions/array_zy_psiy_0.0_beta_0.
 param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
                c(0.0, 0.025, 0.05, 0.075, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-               methods=c('famr_susie', 'famr_prune0', 'famr_noprior', 'famr_none'))
+               methods=c('famr_susie', 'famr_prune0', 'famr_none'),
+               saveloc='plot_images/lineplot_fpr_array_zy_famr_versions.png')
 
 this_dirvec = c('results/results_compare_famr_versions/array_beta_psiy_0.05_beta_0.0,0.0,0.0,0.0_gy_0.0_nexpo_30_prune_max/',
                 'results/results_compare_famr_versions/array_beta_psiy_0.05_beta_0.1,0.1,0.1,0.1_gy_0.0_nexpo_30_prune_max/',
@@ -800,25 +602,5 @@ this_dirvec = c('results/results_compare_famr_versions/array_beta_psiy_0.05_beta
 param_lineplot(this_dirvec, 'Effect size of causal exposures',
                c(0.0, 0.1, 0.2, 0.3), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-               methods=c('famr_susie', 'famr_prune0', 'famr_noprior', 'famr_none'))
-
-# Basic plots, but now with no FAMR methods -- IVW and Median only
-
-this_dirvec = c('results/results_lineplot_comprehensive/array_zy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_zy_psiy_0.025_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_zy_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_zy_psiy_0.075_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_zy_psiy_0.1_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/')
-param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
-               c(0.0, 0.025, 0.05, 0.075, 0.1), c(1,2,3,4),
-               prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
-               methods=c('ivw', 'median'))
-
-this_dirvec = c('results/results_lineplot_comprehensive/array_beta_psiy_0.05_beta_0.0,0.0,0.0,0.0_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_beta_psiy_0.05_beta_0.1,0.1,0.1,0.1_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_beta_psiy_0.05_beta_0.2,0.2,0.2,0.2_gy_0.0_nexpo_30_prune_max/',
-                'results/results_lineplot_comprehensive/array_beta_psiy_0.05_beta_0.3,0.3,0.3,0.3_gy_0.0_nexpo_30_prune_max/')
-param_lineplot(this_dirvec, 'Effect size of causal exposures',
-               c(0.0, 0.1, 0.2, 0.3), c(1,2,3,4),
-               prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
-               methods=c('ivw', 'median'))
+               methods=c('famr_susie', 'famr_prune0', 'famr_none'),
+               saveloc='plot_images/lineplot_power_array_zy_famr_versions.png')

@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 FAMR_paper.Rproj
+results/plot_images/*.png
+

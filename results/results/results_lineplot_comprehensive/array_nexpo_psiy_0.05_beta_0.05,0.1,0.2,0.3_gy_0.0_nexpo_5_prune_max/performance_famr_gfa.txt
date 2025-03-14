@@ -1,0 +1,27 @@
+Average Estimates for Betas: 
+1.058688 2.316073 6.260381 9.344592 0.5804304
+Standard Deviations of Betas: 
+2.435267 3.078456 4.283726 5.159533 1.98676
+Average StdErrors for Betas: 
+8.332796 9.241602 10.16225 11.89255 7.945979
+Calibration results: 
+Pct. correct for pips in bin from 0 to 0.1: 0.67816091954023; n=87
+Pct. correct for pips in bin from 0.1 to 0.2: 0.5; n=16
+Pct. correct for pips in bin from 0.2 to 0.3: 0.619047619047619; n=42
+Pct. correct for pips in bin from 0.3 to 0.4: 0.578947368421053; n=38
+Pct. correct for pips in bin from 0.4 to 0.5: 0.7; n=40
+Pct. correct for pips in bin from 0.5 to 0.6: 0.703703703703704; n=27
+Pct. correct for pips in bin from 0.6 to 0.7: 0.944444444444444; n=18
+Pct. correct for pips in bin from 0.7 to 0.8: 0.928571428571429; n=14
+Pct. correct for pips in bin from 0.8 to 0.9: 0.666666666666667; n=3
+Pct. correct for pips in bin from 0.9 to 1: 0.958139534883721; n=215
+Average PIPs: 
+0.3927355 0.5296148 0.8412987 0.9168767 0.3236575
+Percent of time PIP >= 0.1: 
+0.71 0.8 0.95 0.95 0.72
+Percent of time PIP >= 0.5: 
+0.3 0.52 0.83 0.92 0.2
+Percent of time PIP >= 0.95: 
+0.15 0.29 0.72 0.87 0.08
+Power at FPR threshold of 0.05: 
+0.09 0.16 0.5 0.83
