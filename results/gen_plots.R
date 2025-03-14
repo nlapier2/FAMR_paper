@@ -16,6 +16,7 @@ pip_checker = function(method) {
 
 # change internal method name to displayed method name
 display_name = function(method) {
+  if(method == 'famr_susie')  return('FAMR-Susie')
   if(method == 'famr_gfa')  return('FAMR-Susie')
   if(method == 'famr_none')  return('FAMR-Susie_noFA')
   if(method == 'famr_prune0')  return('FAMR-Susie_clump0')

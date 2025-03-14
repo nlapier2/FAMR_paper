@@ -23,3 +23,7 @@ only processed summaries are provided, as well as the scripts used to generate
 those summaries.
 
 Each of these folders contains their own README file with further details.
+
+This repository contains a slightly modified copy of the 
+[MR-BMA code](https://github.com/verena-zuber/demo_AMD),
+permitted under their MIT license, which can be found in mr-bma_license.
