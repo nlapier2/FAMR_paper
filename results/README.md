@@ -1,9 +1,11 @@
 # Results and plotting scripts for the FAMR paper
 
 `gen_plots.R` contains code to generate most of the plots shown in the FAMR
-paper. Summarized/processed results are shown in the `results/` folder.
+paper. Summarized/processed results are shown in the `results/` folder,
+which can be obtained by unzipping `results.zip`.
 Given these results, the user can simply run `Rscript gen_plots.R` to
 generate the plots. They will appear in `plot_images/`.
+Please unzip `results.zip` beforehand.
 This may take a couple minutes to run.
 
 Some of the raw results files were too large to include here, so we use only the
