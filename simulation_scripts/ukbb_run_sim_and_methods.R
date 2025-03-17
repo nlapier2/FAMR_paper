@@ -4,8 +4,10 @@
 ### IMPORTS
 
 source("run_methods.R")
-source("famr.R")
+#source("famr.R")
 source("sim_mvmr_sparse.R")
+library(FAMR)
+library(pgenlibr)
 
 
 ### COMMAND LINE OPTION PARSING
@@ -367,7 +369,7 @@ select_and_append = function(res, univar, two_samp, locus_data, oracle, do_rss,
     if(criterion == 'all') {
       idx = 1:ncol(locus_data$genos1)
     } else if(criterion == 'pruned' || criterion == 'clumped') {
-      idx = ld_prune_famr(sumstats, locus_data$R, prune_thresh)
+      idx = FAMR:::ld_prune_famr(sumstats, locus_data$R, prune_thresh)
     } else if(grepl('susie', criterion)) {
       idx = select_snp_mvsusie(do_rss=do_rss, npheno=ncol(phenos), genos=locus_data$genos1,
                                phenos=phenos, zscores=sumstats$Z, ld=locus_data$R,
@@ -679,9 +681,12 @@ run_famr_rss = function(ss_famr, R, annih_fact, prune_thresh, fa_prune_thresh,
     if(!is.na(fa) && (fa == 'oracle' || (length(dat_to_return) == 0 && fa == 'gfa'))) {
       dat_to_return = dat
     }
-    famr_res = run_famr_rss_all(dat, opt$susieL, opt$famr_n_iter, 
+    # famr_res = run_famr_rss_all(dat, opt$susieL, opt$famr_n_iter, 
+    #                             K, N, annih=annih_fact)
+    # write_famr_res(out, famr_res, K, fa, for_sim=T)
+    famr_res = run_modified_ctwas(dat, opt$susieL, opt$famr_n_iter, 
                                 K, N, annih=annih_fact)
-    write_famr_res(out, famr_res, K, fa, for_sim=T)
+    FAMR:::write_famr_res(out, famr_res, K, fa, for_sim=T)
   }
   return(dat_to_return)
 }
