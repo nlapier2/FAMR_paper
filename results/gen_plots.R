@@ -140,52 +140,50 @@ stacked_barplot = function(dirname, truevars, prefix='all_res_', thresh = 0.05,
 
 # bar plot showing power at a fixed FPR threshold
 power_fpr_thresh_plot = function(dirname, truevars, prefix='all_res_', n_x_show = 4,
-                                 thresh = 0.05, methods=c()) {
+                                 thresh = 0.05, methods = c(), return_vals = F,
+                                 average_vals = F, use_qval = T, oldpip = F) {
   method_labels = c()
   beta_labels = c()
   all_pos_rates = c()
-  truevars = as.numeric(unlist(strsplit(truevars, ",")))
+  # truevars = as.numeric(unlist(strsplit(truevars, ",")))
 
   for(m in methods) {
     fname = paste0(dirname, prefix, m, '.txt')
     res = na.omit(read.table(fname))
     num_sims = dim(res)[1]
     num_cols = dim(res)[2]
-    ss = strsplit(m, '_')[[1]][1]  # isolate the second-stage method name
-    if(pip_checker(ss)) {
-      num_betas = num_cols
-      if(!oldpip) {
-        res = res[, (num_betas/3*2+1):ncol(res)]
-      }
-    } else {
-      num_betas = num_cols / 3
+    if(pip_checker(m) && !oldpip) {
+      res = res[, (num_cols/3*2+1):ncol(res)]
     }
+    num_betas = num_cols / 3
+    if(oldpip)  num_betas = num_cols
+    
+    # convert to q-values if requested for non-pip (p value-based) method
+    # then take 1-qval and treat them like pips
+    if(use_qval && !pip_checker(m)) {
+      all_pvals = res[,(num_betas*2+1):num_cols]
+      all_qvals = t(apply(all_pvals, 1, function(x) qvalue(x, lambda=0)$qvalues))
+      res = 1 - all_qvals
+    }
+
     num_falsevars = num_betas - length(truevars)
     tot_false = num_sims * num_falsevars
     falselim = tot_false * thresh
 
     # determine power of each true variable at specified FPR threshold
-    sorted_pvals = c()
+    sorted_vals = c()
     for(row in 1:num_sims) {
       for(col in 1:num_betas) {
-        if(pip_checker(ss)) {
-          entry = res[row,col]
-        } else {
-          entry = res[row,(2*num_betas+col)]
-        }
-        sorted_pvals = rbind(sorted_pvals, c(entry, col))
+        entry = res[row, col]
+        sorted_vals = rbind(sorted_vals, c(entry, col))
       }
     }
-    if(pip_checker(ss)) {
-      sorted_pvals = sorted_pvals[order(sorted_pvals[,1],decreasing=TRUE),]
-    } else {
-      sorted_pvals = sorted_pvals[order(sorted_pvals[,1],decreasing=FALSE),]
-    }
+    sorted_vals = sorted_vals[order(sorted_vals[,1],decreasing=TRUE),]
 
     truepos = rep(0, num_betas)
     falsepos = 0
-    for(row in 1:dim(sorted_pvals)[1]) {
-      var = sorted_pvals[row,2]
+    for(row in 1:dim(sorted_vals)[1]) {
+      var = sorted_vals[row,2]
       if(var %in% truevars) {
         truepos[var] = truepos[var] + 1
       } else{
@@ -196,11 +194,18 @@ power_fpr_thresh_plot = function(dirname, truevars, prefix='all_res_', n_x_show 
       }
     }
     truepos = (truepos / num_sims)[1:n_x_show]
+    if(average_vals)  truepos = mean(truepos)
     for(i in 1:length(truepos)) {
-      method_labels = c(method_labels, m)
+      method_labels = c(method_labels, display_name(m))
       beta_labels = c(beta_labels, as.character(i))
       all_pos_rates = c(all_pos_rates, truepos[i])
     }
+  }
+  
+  # optionally return the values instead of plotting
+  # don't return beta_labels as we don't use those in this case
+  if(return_vals) {
+    return(list('method_labels' = method_labels, 'power' = all_pos_rates))
   }
 
   data = data.frame(method_labels, beta_labels, all_pos_rates)
@@ -283,6 +288,43 @@ param_lineplot = function(dirvec, param_name, param_vals, truepos,
   
   if(saveloc != 'NONE')  ggsave(saveloc, dpi=300, bg='white')
 }
+
+
+# line plots showing power at a fixed FPR trending as a function of 
+#   confounding/true signal strength; essentially a wrapper around 
+#   power_fpr_thresh_plot that reads and plots data like param_lineplot.
+param_lineplot_pow_fpr_thresh = function(dirvec, param_name, param_vals, truepos,
+                          prefix='all_res_', thresh = 0.05, methods=c(), 
+                          use_qval=T, oldpip=F, saveloc='NONE') {
+  all_method_labels = c()
+  all_param_vals = c()
+  all_power = c()
+  
+  for(i in 1:length(dirvec)) {
+    dirname = dirvec[i]
+    thisval = param_vals[i]
+    
+    res = power_fpr_thresh_plot(dirname, truepos, prefix = prefix, 
+                                thresh = thresh, methods = methods, 
+                                use_qval = use_qval, oldpip = oldpip, 
+                                return_vals = T, average_vals = T)
+    all_method_labels = c(all_method_labels, res$method_labels)
+    all_power = c(all_power, res$power)
+    all_param_vals = c(all_param_vals, rep(thisval, length(res$method_labels)))
+  }
+  
+  data_power = data.frame(all_method_labels, all_param_vals, all_power)
+  power_plot = ggplot(data_power,
+                      aes(group=all_method_labels, color=all_method_labels, y=all_power, x=all_param_vals)) +
+    geom_line(linewidth=2) + geom_point(size=4) +
+    scale_fill_manual(values=cbPalette) + theme(text = element_text(size = 16)) +
+    xlab(param_name) + ylab('Power') + labs(fill = "Method") + ylim(0, 1)
+  power_plot$labels$colour <- " "
+  ggarrange(power_plot, nrow=1, ncol=1, common.legend = TRUE, legend="bottom")
+  
+  if(saveloc != 'NONE')  ggsave(saveloc, dpi=300, bg='white')
+}
+
 
 # plot showing pip calibration for a single pip-based method
 pip_calibration_plot = function(res, truecols, method_name, oldpip=F, saveloc='NONE') {
@@ -409,7 +451,7 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_zy_psiy_0.0_beta_0
                 'results/results_lineplot_comprehensive/array_zy_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_zy_psiy_0.075_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_zy_psiy_0.1_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/')
-param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
+param_lineplot(this_dirvec, 'Variance of outcome \n explained by confounders',
                c(0.0, 0.025, 0.05, 0.075, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
                methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
@@ -430,7 +472,7 @@ param_lineplot(this_dirvec, 'Effect size of causal exposures',
 this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.05_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.1_nexpo_30_prune_max/')
-param_lineplot(this_dirvec, '% heritability due to \n direct effects',
+param_lineplot(this_dirvec, 'Variance of outcome \n explained by direct effects',
                c(0.0, 0.05, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
                methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
@@ -439,7 +481,7 @@ param_lineplot(this_dirvec, '% heritability due to \n direct effects',
 this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.05_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.1_nexpo_30_prune_max/')
-param_lineplot(this_dirvec, '% heritability due to \n direct effects',
+param_lineplot(this_dirvec, 'Variance of outcome \n explained by direct effects',
                c(0.0, 0.05, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
                methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
@@ -496,7 +538,7 @@ this_dirvec = c('results/results_lineplot_comprehensive/array_zy_psiy_0.0_beta_0
                 'results/results_lineplot_comprehensive/array_zy_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_zy_psiy_0.075_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_zy_psiy_0.1_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/')
-param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
+param_lineplot(this_dirvec, 'Variance of outcome \n explained by confounders',
                c(0.0, 0.025, 0.05, 0.075, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
                methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
@@ -515,7 +557,7 @@ param_lineplot(this_dirvec, 'Effect size of causal exposures',
 this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.05_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.1_nexpo_30_prune_max/')
-param_lineplot(this_dirvec, '% heritability due to \n direct effects',
+param_lineplot(this_dirvec, 'Variance of outcome \n explained by direct effects',
                c(0.0, 0.05, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
                methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
@@ -524,7 +566,7 @@ param_lineplot(this_dirvec, '% heritability due to \n direct effects',
 this_dirvec = c('results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.05_nexpo_30_prune_max/',
                 'results/results_lineplot_comprehensive/array_gy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.1_nexpo_30_prune_max/')
-param_lineplot(this_dirvec, '% heritability due to \n direct effects',
+param_lineplot(this_dirvec, 'Variance of outcome \n explained by direct effects',
                c(0.0, 0.05, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
                methods=c('ivw', 'ivw_gfa', 'median', 'median_gfa'),
@@ -590,7 +632,7 @@ this_dirvec = c('results/results_compare_famr_versions/array_zy_psiy_0.0_beta_0.
                 'results/results_compare_famr_versions/array_zy_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_compare_famr_versions/array_zy_psiy_0.075_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
                 'results/results_compare_famr_versions/array_zy_psiy_0.1_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/')
-param_lineplot(this_dirvec, '% heritability mediated \n by confounders',
+param_lineplot(this_dirvec, 'Variance of outcome \n explained by confounders',
                c(0.0, 0.025, 0.05, 0.075, 0.1), c(1,2,3,4),
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='fpr',
                methods=c('famr_susie', 'famr_prune0', 'famr_none'),
@@ -605,3 +647,17 @@ param_lineplot(this_dirvec, 'Effect size of causal exposures',
                prefix='all_res_', thresh = 0.05, pip_thresh=0.95, type='power',
                methods=c('famr_susie', 'famr_prune0', 'famr_none'),
                saveloc='plot_images/lineplot_power_array_zy_famr_versions.png')
+
+
+# power at a fixed FPR threshold plot, varying theta_zy
+
+# this_dirvec = c('results/results_lineplot_comprehensive/array_zy_psiy_0.0_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
+#                 'results/results_lineplot_comprehensive/array_zy_psiy_0.025_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
+#                 'results/results_lineplot_comprehensive/array_zy_psiy_0.05_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
+#                 'results/results_lineplot_comprehensive/array_zy_psiy_0.075_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/',
+#                 'results/results_lineplot_comprehensive/array_zy_psiy_0.1_beta_0.05,0.1,0.2,0.3_gy_0.0_nexpo_30_prune_max/')
+# param_lineplot_pow_fpr_thresh(this_dirvec, 'Variance of outcome \n explained by confounders',
+#                c(0.0, 0.025, 0.05, 0.075, 0.1), c(1,2,3,4),
+#                prefix='all_res_', thresh = 0.05,
+#                methods=c('famr_gfa', 'ivw', 'ivw_gfa', 'median', 'median_gfa'),
+#                saveloc='plot_images/lineplot_pow_fpr_thresh_array_zy.png')

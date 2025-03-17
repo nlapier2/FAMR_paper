@@ -4,4 +4,7 @@
 .Ruserdata
 FAMR_paper.Rproj
 results/plot_images/*.png
-
+results/results/
+results/backup/
+.DS_Store
+results/.DS_Store
