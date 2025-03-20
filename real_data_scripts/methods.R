@@ -343,7 +343,7 @@ run_bma = function(G, X, Y, indices, x_betas=c(), x_stderrs=c(), y_betas=c(), y_
     y_betas = regr_res$y_betas
     y_stderrs = regr_res$y_stderrs
   }
-  num_exposures = dim(X)[2]
+  num_exposures = dim(x_betas)[2]
   exposures = rep('rs', num_exposures)  # set up variable "names" so we know which were picked
   for (i in 1:length(exposures)) { exposures[i] = paste0(exposures[i], i) }
   

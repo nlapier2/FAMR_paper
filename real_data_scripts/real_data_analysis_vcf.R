@@ -120,7 +120,7 @@ if (sys.nframe() == 0) {  # if running from shell or Rscript (not sourcing)
 
     # either compute q-value or set to 1-PIP for methods that give PIPs
     if(grepl('susie', met) || grepl('mrash', met) || grepl('varbvs', met)
-       || grepl('brms', met) || grepl('vebboost', met)) {
+       || grepl('brms', met) || grepl('vebboost', met) || grepl('bma', met)) {
       res[[met]]$qvalue = 1 - res[[met]]$pvalue
     } else {
       res[[met]]$qvalue = qvalue(res[[met]]$pvalue, lambda=0)$qvalues
